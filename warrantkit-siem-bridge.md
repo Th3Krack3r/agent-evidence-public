@@ -1,27 +1,26 @@
 # warrantkit-siem-bridge
 
-**SIEM + Helm packaging layer for WarrantKit**
+**SIEM integration and Helm packaging for WarrantKit**
 
-Companion project that makes [WarrantKit](https://github.com/Therealdk8890/WarrantKit) usable by security teams.
+Companion project providing the operational layer for [WarrantKit](https://github.com/Therealdk8890/WarrantKit), a runtime enforcement and proof platform for autonomous agents developed by Daniel Kissel.
 
-WarrantKit (by Daniel Kissel) is the runtime enforcement and proof platform.  
-This repository is the operational layer on top of it: evidence normalization, SIEM forwarders, and Helm charts so teams can deploy without compiling from source.
+This component focuses on evidence normalization, SIEM forwarders, and Kubernetes deployment so security teams can adopt WarrantKit without building integration infrastructure from source.
 
 ---
 
-## What it does
+## Capabilities
 
 - Consumes WarrantKit Evidence API / EvidenceEnvelope objects
 - Verifies receipt integrity
-- Normalizes into SIEM-friendly `AgentEvent` records
-- Forwards to Splunk HEC, Datadog, or generic webhooks
-- Provides Helm chart for the bridge + optional runtime packaging
+- Normalizes events into a stable `AgentEvent` schema
+- Forwards to Splunk HEC, Datadog Logs, or generic webhooks
+- Provides Helm charts for bridge deployment and optional runtime packaging
 
-**Core design rule:** evidence flows out. Authority stays with the WarrantKit runtime. The bridge never upgrades an enforcement claim.
+**Core constraint:** Evidence flows outbound from the runtime. Authority remains exclusively with the WarrantKit runtime. The bridge does not elevate or reinterpret enforcement outcomes.
 
 ---
 
-## Architecture (high level)
+## Architecture
 
 ```
 WarrantKit Runtime
@@ -31,7 +30,7 @@ WarrantKit Runtime
 │  warrantkit-siem-bridge │
 │  • verify receipts      │
 │  • normalize            │
-│  • dedupe by event_id   │
+│  • deduplicate          │
 │  • forward              │
 └────────────────────────┘
         │
@@ -44,22 +43,24 @@ Splunk    Datadog    Webhook
 
 ## Relationship to agent-evidence-bridge
 
-`warrantkit-siem-bridge` is the WarrantKit-specific packaging and deployment focus.  
-`agent-evidence-bridge` is the more general multi-source bridge (WarrantKit + OTLP + webhooks).
+| Component | Focus |
+|-----------|-------|
+| `warrantkit-siem-bridge` | WarrantKit-specific packaging and Helm deployment |
+| `agent-evidence-bridge` | Multi-source bridge (WarrantKit, OTLP, webhooks) |
 
-Both share the same design principles and can be used together.
+Both components share the same design principles and trust model.
 
 ---
 
-## Credits
+## Attribution
 
-- **WarrantKit, AgentContainment, Evidence API, and all runtime authority semantics** — Daniel Kissel ([Therealdk8890](https://github.com/Therealdk8890))
-- Bridge, SIEM adapters, and Helm packaging — Th3Krack3r / West Electronics LLC
+- **WarrantKit**, AgentContainment, Evidence API, and all runtime authority semantics — Daniel Kissel ([Therealdk8890](https://github.com/Therealdk8890))
+- Bridge implementation, SIEM adapters, and Helm packaging — Th3Krack3r / West Electronics LLC
 
-This is a companion product, not a fork.
+This project is a companion integration layer and is not a fork of WarrantKit.
 
 ---
 
 ## License
 
-Apache-2.0
+Apache License 2.0
