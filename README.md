@@ -1,26 +1,30 @@
-# agent-evidence-bridge (public notes)
+# agent-evidence-bridge
 
-**Universal SIEM bridge for AI agent evidence**
+**SIEM integration and Helm packaging for AI agent runtime evidence**
 
-Open-core companion to [WarrantKit](https://github.com/Therealdk8890/WarrantKit) (runtime enforcement & proof platform for autonomous agents by Daniel Kissel).
+Companion project to [WarrantKit](https://github.com/Therealdk8890/WarrantKit), a runtime enforcement and proof platform for autonomous agents developed by Daniel Kissel.
 
-This project turns agent runtime evidence into something security teams can actually use: normalized events that land in Splunk, Datadog, or any webhook — without breaking the trust boundary that authority stays with the runtime.
+This component provides the operational layer that converts agent runtime evidence into normalized, SIEM-ready events while preserving strict trust boundaries between the runtime and downstream observability systems.
 
-> **Note:** The implementation repositories (`agent-evidence-bridge` and `warrantkit-siem-bridge`) are currently private. This public repo contains the README, architecture overview, and design notes so recruiters and collaborators can see the scope of the work.
+> **Note:** The implementation repositories (`agent-evidence-bridge` and `warrantkit-siem-bridge`) remain private. This public repository publishes architecture documentation and design notes for evaluation by technical recruiters, hiring managers, and potential collaborators.
 
 ---
 
-## Why it exists
+## Problem
 
-Agent runtimes produce valuable evidence (policy decisions, containment events, receipts). Most SIEM tools have no native understanding of that data. Security teams won’t adopt a kill-switch or proof system if they have to compile from source and hand-roll parsers.
+Agent runtimes generate security-relevant evidence including policy decisions, containment actions, and cryptographic receipts. Existing SIEM platforms lack native support for this data model. As a result, security teams face significant integration friction when evaluating or adopting agent runtime controls.
 
-`agent-evidence-bridge` fills the gap:
+---
 
-- **Ingest** from WarrantKit Evidence API, OTLP/HTTP, or generic webhooks
-- **Normalize** into a stable `AgentEvent` model
-- **Dedupe** by event/receipt ID so duplicate delivery is not a new event
-- **Forward** to Splunk HEC, Datadog Logs, or any HTTPS webhook
-- **Deploy** via Helm so the bridge (and optionally the runtime) lands in an existing cluster
+## Solution
+
+`agent-evidence-bridge` provides a lightweight, deployable bridge that:
+
+- Ingests evidence from the WarrantKit Evidence API, OTLP/HTTP, and generic webhooks
+- Normalizes events into a stable `AgentEvent` schema
+- Deduplicates by event or receipt identifier
+- Forwards normalized events to Splunk HEC, Datadog Logs, or arbitrary HTTPS webhooks
+- Supports Kubernetes deployment via Helm charts
 
 ---
 
@@ -36,8 +40,8 @@ flowchart LR
 
     subgraph Bridge
         AD[Source Adapters]
-        NORM[Normalize → AgentEvent]
-        DEDUPE[Dedupe by event_id]
+        NORM[Normalize to AgentEvent]
+        DEDUPE[Deduplicate by event_id]
     end
 
     subgraph Sinks
@@ -55,35 +59,37 @@ flowchart LR
     DEDUPE --> WEBHOOK
 ```
 
-**Design rules (inherited from WarrantKit contracts)**
+### Design Principles
 
-- Evidence flows **out** from the runtime. Authority does **not** flow in from the bridge or SIEM.
-- The bridge transports, normalizes, and presents evidence. It never upgrades an enforcement result into a stronger security claim.
-- If the sink is down, the source runtime is unaffected.
-- Ingestion is idempotent by `event_id` / receipt ID.
+The following constraints are inherited from the WarrantKit contracts and are treated as non-negotiable:
 
----
-
-## Related private repositories
-
-| Repo | Focus |
-|------|-------|
-| `agent-evidence-bridge` | Multi-source bridge (WarrantKit + OTLP + webhooks) |
-| `warrantkit-siem-bridge` | WarrantKit-specific packaging + Helm chart |
-
-Both share the same design principles and trust-boundary rules.
+- Evidence flows outbound from the runtime. Authority does not flow inbound from the bridge or SIEM.
+- The bridge performs transport, normalization, and presentation only. It does not elevate or reinterpret enforcement outcomes.
+- Failure of a downstream sink has no impact on the source runtime.
+- Ingestion is idempotent with respect to `event_id` and receipt identifiers.
 
 ---
 
-## Credits
+## Repository Scope
 
-- **WarrantKit, AgentContainment, and the Evidence API contracts** were created by **Daniel Kissel** ([Therealdk8890](https://github.com/Therealdk8890)). All runtime authority, epoch fencing, containment, and evidence semantics originate in his work.
-- Bridge implementation: **Th3Krack3r** / West Electronics LLC
+| Repository | Description |
+|------------|-------------|
+| `agent-evidence-bridge` | Multi-source evidence bridge supporting WarrantKit, OTLP, and webhooks |
+| `warrantkit-siem-bridge` | WarrantKit-specific packaging, Helm charts, and deployment focus |
 
-This is a companion project, not a fork or replacement of WarrantKit.
+Both repositories share the same architectural principles and trust model.
+
+---
+
+## Attribution
+
+- **WarrantKit**, AgentContainment, and the Evidence API contracts were designed and implemented by **Daniel Kissel** ([Therealdk8890](https://github.com/Therealdk8890)). All runtime authority, epoch fencing, containment semantics, and evidence definitions originate from that work.
+- Bridge implementation, SIEM adapters, and Helm packaging by **Th3Krack3r** / West Electronics LLC.
+
+This project is a companion integration layer and is not a fork or derivative of WarrantKit.
 
 ---
 
 ## License
 
-Apache-2.0 (intended for the open-core bridge)
+Apache License 2.0 (intended for the open-core bridge components)
